@@ -1,9 +1,13 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuración de la base de datos
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:1234@localhost:3306/base-estetica"
+SQLALCHEMY_DATABASE_URL = os.getenv("DB_CONFIG")
 
 # Crear el motor (engine)
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)

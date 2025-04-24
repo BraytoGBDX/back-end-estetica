@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.db import engine, Base, SesionLocal
 from models.usuarios import User 
-from crud.createAdmin import create_default_admin  # Esta función crea el admin si no existe
+from crud.createAdmin import create_default_admin
+from routes.usuarios import user
 
 app = FastAPI(
     title="Example S.A de C.V",
@@ -27,3 +28,5 @@ def startup_event():
     db = SesionLocal()
     create_default_admin(db)
     db.close()
+    
+app.include_router(user)
