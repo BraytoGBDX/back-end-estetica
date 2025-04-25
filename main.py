@@ -5,6 +5,8 @@ from models.usuarios import User
 from models.citas import Cita
 from crud.createAdmin import create_default_admin
 from routes.usuarios import user
+from routes.citas import cita_router
+from routes.tratamientos import tratamiento_router
 
 app = FastAPI(
     title="Example S.A de C.V",
@@ -31,3 +33,6 @@ def startup_event():
     db.close()
     
 app.include_router(user)
+app.include_router(cita_router)
+app.include_router(tratamiento_router)
+

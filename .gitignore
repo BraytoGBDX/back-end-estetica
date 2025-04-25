@@ -1,7 +1,9 @@
-/env
+/around
+
+.env
 __pycache__/
 *.pyc
 *.pyo
 #test
-.envi
 
+.env

@@ -1,13 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-
-from config.db import get_db
+import config.db
 from schemas.citas import Cita, CitaCreate, CitaUpdate
 from crud import citas as CitaCrud
 from routes.usuarios import verify_token_simple  # Asegúrate de importar correctamente
 
 cita_router = APIRouter()
+
+def get_db():
+    db = config.db.SesionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @cita_router.get("/citas/", response_model=List[Cita], tags=["Citas"])
 def get_all_citas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), user_email: str = Depends(verify_token_simple)):
