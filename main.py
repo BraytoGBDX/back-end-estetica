@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.db import engine, Base, SesionLocal
 from models.usuarios import User 
+from models.citas import Cita
 from crud.createAdmin import create_default_admin
 from routes.usuarios import user
 

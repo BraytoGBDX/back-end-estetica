@@ -1,17 +1,16 @@
 from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy.orm import relationship
 from config.db import Base
-
-
 import enum
 
 class TipoUsuario(str, enum.Enum):
-	Cliente = "Cliente"
-	Administrador = "Administrador"
+    Cliente = "Cliente"
+    Administrador = "Administrador"
 
 class Estatus(str, enum.Enum):
-	Activo = "Activo"
-	Inactivo = "Inactivo"
-	Bloqueado = "Bloqueado"
+    Activo = "Activo"
+    Inactivo = "Inactivo"
+    Bloqueado = "Bloqueado"
 
 class User(Base):
     __tablename__ = "tbb_usuarios"
@@ -26,4 +25,6 @@ class User(Base):
     estatus = Column(Enum(Estatus))
     fechaRegistro = Column(DateTime)
     fechaActualizacion = Column(DateTime)
-    
+
+    # 👇 back_populates debe coincidir con el de Cita
+    cita = relationship("Cita", back_populates="usuario")

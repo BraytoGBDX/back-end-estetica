@@ -8,6 +8,16 @@ from typing import List
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from fastapi import Header
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv() 
+
+SECRET_KEY = os.getenv("SECRET_GOOGLE")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -16,9 +26,8 @@ def verify_password(plain_password: str, hashed_password: str):
 
 user = APIRouter()
 
-SECRET_KEY = "secret"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 bearer_scheme = HTTPBearer()
 
@@ -28,6 +37,17 @@ def get_db():
         yield db
     finally:
         db.close()
+        
+def verify_google_token(token: str):
+    try:
+        idinfo = id_token.verify_oauth2_token(token, google_requests.Request())
+        return idinfo
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de Google inválido o expirado"
+        )
+
 
 def verify_token_simple(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     token = credentials.credentials
@@ -50,6 +70,19 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+@user.post("/users/google-login", response_model=Token, tags=["Usuarios"])
+async def login_with_google(authorization: str = Header(...), db: Session = Depends(get_db)):
+    token = authorization.split(" ")[1]  # Authorization: Bearer <token_id_google>
+    idinfo = verify_google_token(token)
+
+    # Usa el método de tu CRUD
+    user_db = UserCrud.create_or_update_user_with_google(db, user_info=idinfo)
+
+    # Genera token JWT para sesión interna
+    access_token = create_access_token(data={"sub": user_db.correoElectronico})
+    return {"access_token": access_token, "token_type": "bearer"}
+
 
 @user.post("/users/login", response_model=Token, tags=["Usuarios"])
 async def login_for_access_token(user: UserLogin, db: Session = Depends(get_db)):
