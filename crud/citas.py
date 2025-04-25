@@ -19,7 +19,7 @@ def get_citas_by_usuario(db: Session, user_id: int, skip: int = 0, limit: int = 
 def create_cita(db: Session, cita: CitaCreate, user_id: int):
     db_cita = CitaModel(
         idUsuario=user_id,
-        tratamiento=cita.tratamiento,
+        idTratamiento=cita.idTratamiento,
         estatus=cita.estatus,
         horario=cita.horario,
         fecha=cita.fecha

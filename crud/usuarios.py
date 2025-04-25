@@ -10,12 +10,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
-# Obtener un usuario por correo electrónico
-def get_user_by_email(db: Session, email: str):
-    return db.query(UserModel).filter(UserModel.correoElectronico == email).first()
 
 def get_user_by_id(db: Session, user_id: str):
     return db.query(UserModel).filter(UserModel.id == user_id).first()
+
+def get_user_by_email(db: Session, correo: str):
+    return db.query(UserModel).filter(UserModel.correoElectronico == correo).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 10):
     return db.query(UserModel).offset(skip).limit(limit).all()
@@ -37,33 +37,6 @@ def create_user(db: Session, user: UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
-
-# Crear o actualizar un usuario con OAuth de Google
-def create_or_update_user_with_google(db: Session, user_info: dict):
-    # Buscar el usuario por el correo electrónico
-    existing_user = get_user_by_email(db, user_info["email"])
-    
-    if existing_user:
-        # Si el usuario ya existe, actualizamos los datos
-        existing_user.nombre = user_info["given_name"]
-        existing_user.apellidos = user_info["family_name"]
-        existing_user.fechaActualizacion = datetime.utcnow()
-        db.commit()
-        db.refresh(existing_user)
-        return existing_user
-    else:
-        # Si el usuario no existe, lo creamos
-        user_create = UserCreate(
-            nombre=user_info["given_name"],
-            apellidos=user_info["family_name"],
-            correoElectronico=user_info["email"],
-            tipoUsuario="Cliente",  # O "Administrador" si corresponde
-            nombreUsuario=user_info["email"],  # Usamos el correo como nombre de usuario
-            contrasena="randomPassword123",  # Asigna una contraseña temporal aquí
-            numeroTelefono=None,  # Este dato puede no estar disponible en Google OAuth
-            estatus="Activo"  # Por defecto, activo
-        )
-        return create_user(db, user_create)
 
 # Actualizar usuario
 def update_user(db: Session, user_id: str, user: UserUpdate):

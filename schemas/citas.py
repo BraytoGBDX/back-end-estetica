@@ -4,7 +4,7 @@ from typing import Optional
 
 class CitaBase(BaseModel):
     idUsuario: int  # ID del usuario que hace la cita
-    tratamiento: str
+    idTratamiento: int
     estatus: str
     horario: time
     fecha: date
