@@ -57,11 +57,13 @@ def verify_token_simple(credentials: HTTPAuthorizationCredentials = Depends(bear
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: int = payload.get("id")  # Extraemos el id
-        if user_id is None:
+        tipo_usuario = payload.get("tipoUsuario")  # Extraemos el tipoUsuario
+        if user_id is None or tipo_usuario is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
-        return user_id  
+        return {"user_id": user_id, "tipo_usuario": tipo_usuario}  # Regresamos tanto el ID como el tipo de usuario
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido o expirado")
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -69,36 +71,59 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+
 @user.post("/users/google-login", response_model=Token, tags=["Usuarios"])
 async def login_with_google(authorization: str = Header(...), db: Session = Depends(get_db)):
     token = authorization.split(" ")[1]  # Authorization: Bearer <token_id_google>
-    idinfo = verify_google_token(token)
+    idinfo = verify_google_token(token)  # Verificar el token de Google
+    
+    # Aquí creas o actualizas al usuario con los datos obtenidos de Google
     user_db = UserCrud.create_or_update_user_with_google(db, user_info=idinfo)
-    access_token = create_access_token(data={"sub": user_db.correoElectronico, "id": user_db.id})
+    
+    # Ahora que tenemos el usuario, incluimos el campo 'tipoUsuario' en el payload del token
+    access_token = create_access_token(data={
+        "sub": user_db.correoElectronico,  # Correo electrónico del usuario
+        "id": user_db.id,  # ID del usuario
+        "tipoUsuario": user_db.tipoUsuario  # Tipo de usuario que debería estar en el modelo 'User'
+    })
+    
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @user.post("/users/login", response_model=Token, tags=["Usuarios"])
 async def login_for_access_token(user: UserLogin, db: Session = Depends(get_db)):
+    # Verificar si el usuario existe en la base de datos
     user_db = UserCrud.get_user_by_email(db, correo=user.correoElectronico)
     if not user_db or not verify_password(user.contrasena, user_db.contrasena):
         raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
     
-    access_token = create_access_token(data={"sub": user_db.correoElectronico, "id": user_db.id})
+    # Aquí se incluye el campo 'tipoUsuario' en el payload del token
+    access_token = create_access_token(data={
+        "sub": user_db.correoElectronico,  # Correo electrónico del usuario
+        "id": user_db.id,  # ID del usuario
+        "tipoUsuario": user_db.tipoUsuario  # Tipo de usuario (asegúrate de que el modelo 'User' tenga este campo)
+    })
+    
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+
 
 @user.get('/users/', response_model=List[User], tags=['Usuarios'])
 async def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), user_id_from_token: int = Depends(verify_token_simple)):
     return UserCrud.get_users(db=db, skip=skip, limit=limit)
 
 @user.get("/users/{user_id}", response_model=User, tags=["Usuarios"])
-async def get_user(user_id: int, db: Session = Depends(get_db), user_id_from_token: int = Depends(verify_token_simple)):
-    if user_id != user_id_from_token:  # Verificación de autorización
+async def get_user(user_id: int, db: Session = Depends(get_db), user_data_from_token: dict = Depends(verify_token_simple)):
+    if user_id != user_data_from_token["user_id"]:  # Verificación de autorización
         raise HTTPException(status_code=403, detail="No autorizado para ver este usuario")
     
+    # Puedes utilizar user_data_from_token["tipo_usuario"] aquí si lo necesitas
     user = UserCrud.get_user_by_id(db=db, user_id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
+
 
 @user.post("/usersCreate/", response_model=User, tags=["Usuarios"])
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):  
