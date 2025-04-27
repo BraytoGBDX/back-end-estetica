@@ -115,14 +115,19 @@ async def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_d
 
 @user.get("/users/{user_id}", response_model=User, tags=["Usuarios"])
 async def get_user(user_id: int, db: Session = Depends(get_db), user_data_from_token: dict = Depends(verify_token_simple)):
-    if user_id != user_data_from_token["user_id"]:  # Verificación de autorización
-        raise HTTPException(status_code=403, detail="No autorizado para ver este usuario")
-    
-    # Puedes utilizar user_data_from_token["tipo_usuario"] aquí si lo necesitas
-    user = UserCrud.get_user_by_id(db=db, user_id=user_id)
+    # Si el usuario es un administrador, permite ver cualquier usuario
+    if user_data_from_token["tipo_usuario"] == "Administrador":
+        user = UserCrud.get_user_by_id(db=db, user_id=user_id)
+    else:
+        # Si el usuario no es administrador, solo puede ver su propio perfil
+        if user_id != user_data_from_token["user_id"]:
+            raise HTTPException(status_code=403, detail="No autorizado para ver este usuario")
+        user = UserCrud.get_user_by_id(db=db, user_id=user_data_from_token["user_id"])
+
     if user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
+
 
 
 @user.post("/usersCreate/", response_model=User, tags=["Usuarios"])

@@ -12,7 +12,7 @@ class TratamientoBase(BaseModel):
     nombre: str
     descripcion: Optional[str] = None
     estatus: Estatus
-    tiempo: time
+    tiempo: str
 
     class Config:
         from_attributes = True
@@ -24,7 +24,7 @@ class TratamientoUpdate(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     estatus: Optional[Estatus] = None
-    tiempo: Optional[time] = None
+    tiempo: Optional[str] = None
 
     class Config:
         from_attributes = True

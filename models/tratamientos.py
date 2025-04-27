@@ -14,7 +14,7 @@ class Tratamiento(Base):
     nombre = Column(String(100), nullable=False)
     descripcion = Column(String(255), nullable=True)
     estatus = Column(Enum(EstatusTratamiento), default=EstatusTratamiento.Activo, nullable=False)
-    tiempo = Column(Time, nullable=False) 
+    tiempo = Column(String(100), nullable=False) 
     
     cita = relationship("Cita", back_populates="tratamiento")
 
