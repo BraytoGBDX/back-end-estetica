@@ -26,14 +26,14 @@ def get_citas_usuario(skip: int = 0, limit: int = 10, db: Session = Depends(get_
 
 
 @cita_router.post("/citas/", response_model=Cita, tags=["Citas"])
-def create_cita(cita: CitaCreate, db: Session = Depends(get_db), user_id: int = Depends(verify_token_simple)):
+def create_cita(cita: CitaCreate, db: Session = Depends(get_db), user_id=(usuarioGet.get_user_by_id)):
     # Obtenemos el usuario con el ID recibido en user_id
     user = usuarioGet.get_user_by_id(db, user_id=user_id)  # Esto buscará el usuario por su ID
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
     # Ahora creamos la cita, pasando el ID del usuario correctamente
     return CitaCrud.create_cita(db, cita=cita, user_id=user.id)
+
 
 @cita_router.put("/citas/{cita_id}", response_model=Cita, tags=["Citas"])
 def update_cita(cita_id: int, cita: CitaUpdate, db: Session = Depends(get_db), user_email: str = Depends(verify_token_simple)):

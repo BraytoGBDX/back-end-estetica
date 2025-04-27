@@ -43,7 +43,7 @@ def create_or_update_user_with_google(db: Session, user_info: dict):
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
-def get_user_by_id(db: Session, user_id: str):
+def get_user_by_id(db: Session, user_id: int):
     return db.query(UserModel).filter(UserModel.id == user_id).first()
 
 def get_user_by_email(db: Session, correo: str):
@@ -77,6 +77,7 @@ def update_user(db: Session, user_id: str, user: UserUpdate):
         return None
     for key, value in user.dict(exclude_unset=True).items():
         setattr(db_user, key, value)
+
         
         db_user.fechaActualizacion = datetime.utcnow()
     db.commit()

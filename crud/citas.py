@@ -17,6 +17,7 @@ def get_citas_by_usuario(db: Session, user_id: int, skip: int = 0, limit: int = 
 
 # Crear una nueva cita
 def create_cita(db: Session, cita: CitaCreate, user_id: int):
+    #user = db.query(UserModel).filter(UserModel.id == user_id).first()
     db_cita = CitaModel(
         idUsuario=user_id,
         idTratamiento=cita.idTratamiento,

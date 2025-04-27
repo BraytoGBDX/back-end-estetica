@@ -3,7 +3,7 @@ from datetime import datetime, time, date
 from typing import Optional
 
 class CitaBase(BaseModel):
-    idUsuario: int  # ID del usuario que hace la cita
+    idUsuario: int 
     idTratamiento: int
     estatus: str
     horario: time
