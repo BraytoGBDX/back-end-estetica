@@ -20,7 +20,7 @@ class User(Base):
     apellidos = Column(String(60))
     tipoUsuario = Column(Enum(TipoUsuario))
     correoElectronico = Column(String(100))
-    contrasena = Column(String(60))
+    contrasena = Column(String(255))
     numeroTelefono = Column(String(20))
     estatus = Column(Enum(Estatus))
     fechaRegistro = Column(DateTime)

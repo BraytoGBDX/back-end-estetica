@@ -128,6 +128,14 @@ async def get_user(user_id: int, db: Session = Depends(get_db), user_data_from_t
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
 
+@user.get("/users/email/{correo_electronico}", response_model=User, tags=["Usuarios"])
+async def get_user_by_email_public(correo_electronico: str, db: Session = Depends(get_db)):
+    user = UserCrud.get_user_by_email(db=db, correo=correo_electronico)
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return user
 
 
 @user.post("/usersCreate/", response_model=User, tags=["Usuarios"])
@@ -135,14 +143,14 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return UserCrud.create_user(db=db, user=user)
 
 @user.put("/usersUpdate/{user_id}", response_model=User, tags=["Usuarios"])
-async def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db), user_id_from_token: int = Depends(verify_token_simple)):
+async def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
     updated_user = UserCrud.update_user(db=db, user_id=user_id, user=user_update)
     if updated_user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado o no se pudo actualizar")
     return updated_user
 
 @user.delete("/usersDelete/{user_id}", tags=["Usuarios"])
-async def delete_user(user_id: int, db: Session = Depends(get_db), user_id_from_token: int = Depends(verify_token_simple)):
+async def delete_user(user_id: int, db: Session = Depends(get_db)):
     deleted = UserCrud.delete_user(db=db, user_id=user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Usuario no encontrado o no se pudo eliminar")
